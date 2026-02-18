@@ -15,9 +15,16 @@ function createDb(dbPath) {
       description TEXT DEFAULT '',
       priority TEXT DEFAULT 'medium',
       completed INTEGER DEFAULT 0,
+      dueDate TEXT DEFAULT NULL,
       createdAt TEXT NOT NULL
     )
   `);
+
+  // Migrate: add dueDate column if missing (existing databases)
+  const columns = db.prepare("PRAGMA table_info(tasks)").all();
+  if (!columns.some(c => c.name === 'dueDate')) {
+    db.exec('ALTER TABLE tasks ADD COLUMN dueDate TEXT DEFAULT NULL');
+  }
 
   return db;
 }

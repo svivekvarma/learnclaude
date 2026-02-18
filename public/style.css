@@ -71,6 +71,22 @@ header h1 {
   width: 100%;
 }
 
+.task-form input[type="date"] {
+  padding: 10px 12px;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.task-form input[type="date"]:focus {
+  border-color: #818cf8;
+}
+
 .task-form select {
   padding: 10px 12px;
   border: 1px solid #334155;
@@ -183,6 +199,11 @@ header h1 {
   opacity: 0.55;
 }
 
+.task-item.overdue {
+  border-color: #991b1b;
+  background: #1a1520;
+}
+
 .task-checkbox {
   width: 22px;
   height: 22px;
@@ -237,6 +258,43 @@ header h1 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Due dates */
+.due-date {
+  font-size: 0.78rem;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+  flex-shrink: 0;
+  background: #1e3a5f;
+  color: #7dd3fc;
+}
+
+.due-today {
+  background: #3b3010;
+  color: #fbbf24;
+}
+
+.due-overdue {
+  background: #450a0a;
+  color: #fca5a5;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.due-done {
+  background: #1e293b;
+  color: #475569;
+  text-decoration: line-through;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.stat-overdue strong {
+  color: #f87171 !important;
 }
 
 .priority-badge {

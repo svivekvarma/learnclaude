@@ -5,6 +5,7 @@ const form = document.getElementById('task-form');
 const titleInput = document.getElementById('task-title');
 const descInput = document.getElementById('task-description');
 const prioritySelect = document.getElementById('task-priority');
+const dueDateInput = document.getElementById('task-due-date');
 const searchInput = document.getElementById('search-input');
 const taskList = document.getElementById('task-list');
 const statsEl = document.getElementById('stats');
@@ -28,6 +29,52 @@ async function loadTasks() {
   updateStats(tasks);
 }
 
+// Check if a due date is overdue (past today and not completed)
+function isOverdue(task) {
+  if (!task.dueDate || task.completed) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(task.dueDate + 'T00:00:00');
+  return due < today;
+}
+
+// Check if due today
+function isDueToday(task) {
+  if (!task.dueDate || task.completed) return false;
+  const today = new Date().toISOString().split('T')[0];
+  return task.dueDate === today;
+}
+
+// Format due date for display
+function formatDueDate(task) {
+  if (!task.dueDate) return '';
+  const due = new Date(task.dueDate + 'T00:00:00');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  let label;
+  if (due.getTime() === today.getTime()) {
+    label = 'Today';
+  } else if (due.getTime() === tomorrow.getTime()) {
+    label = 'Tomorrow';
+  } else {
+    label = due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  let className = 'due-date';
+  if (task.completed) {
+    className += ' due-done';
+  } else if (isOverdue(task)) {
+    className += ' due-overdue';
+  } else if (isDueToday(task)) {
+    className += ' due-today';
+  }
+
+  return `<span class="${className}">${label}</span>`;
+}
+
 // Render task list
 function renderTasks(tasks) {
   if (tasks.length === 0) {
@@ -36,13 +83,14 @@ function renderTasks(tasks) {
   }
 
   taskList.innerHTML = tasks.map(task => `
-    <div class="task-item ${task.completed ? 'completed' : ''}" data-id="${task.id}">
+    <div class="task-item ${task.completed ? 'completed' : ''} ${isOverdue(task) ? 'overdue' : ''}" data-id="${task.id}">
       <div class="task-checkbox ${task.completed ? 'checked' : ''}"
            onclick="toggleTask(${task.id}, ${!task.completed})"></div>
       <div class="task-content">
         <div class="task-title">${escapeHtml(task.title)}</div>
         ${task.description ? `<div class="task-description">${escapeHtml(task.description)}</div>` : ''}
       </div>
+      ${formatDueDate(task)}
       <span class="priority-badge priority-${task.priority}">${task.priority}</span>
       <button class="task-delete" onclick="deleteTask(${task.id})" title="Delete task">&times;</button>
     </div>
@@ -53,13 +101,13 @@ function renderTasks(tasks) {
 function updateStats(tasks) {
   const total = tasks.length;
   const completed = tasks.filter(t => t.completed).length;
-  const highPriority = tasks.filter(t => t.priority === 'high' && !t.completed).length;
+  const overdue = tasks.filter(t => isOverdue(t)).length;
 
   statsEl.innerHTML = `
     <span class="stat-item"><strong>${total}</strong> total</span>
     <span class="stat-item"><strong>${completed}</strong> completed</span>
     <span class="stat-item"><strong>${total - completed}</strong> remaining</span>
-    ${highPriority > 0 ? `<span class="stat-item"><strong>${highPriority}</strong> high priority</span>` : ''}
+    ${overdue > 0 ? `<span class="stat-item stat-overdue"><strong>${overdue}</strong> overdue</span>` : ''}
   `;
 }
 
@@ -73,6 +121,10 @@ form.addEventListener('submit', async (e) => {
     priority: prioritySelect.value
   };
 
+  if (dueDateInput.value) {
+    body.dueDate = dueDateInput.value;
+  }
+
   if (!body.title) return;
 
   await fetch(API, {
@@ -83,6 +135,7 @@ form.addEventListener('submit', async (e) => {
 
   titleInput.value = '';
   descInput.value = '';
+  dueDateInput.value = '';
   prioritySelect.value = 'medium';
   titleInput.focus();
   loadTasks();

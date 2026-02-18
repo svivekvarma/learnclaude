@@ -63,7 +63,7 @@ app.get('/tasks/:id', (req, res) => {
 
 // POST create a new task
 app.post('/tasks', (req, res) => {
-  const { title, description, priority } = req.body;
+  const { title, description, priority, dueDate } = req.body;
   if (!title) return res.status(400).json({ error: 'Title is required' });
   if (priority !== undefined && !VALID_PRIORITIES.includes(priority)) {
     return res.status(400).json({ error: 'Priority must be low, medium, or high' });
@@ -71,8 +71,8 @@ app.post('/tasks', (req, res) => {
 
   const createdAt = new Date().toISOString();
   const result = db.prepare(
-    'INSERT INTO tasks (title, description, priority, completed, createdAt) VALUES (?, ?, ?, 0, ?)'
-  ).run(title, description || '', priority || 'medium', createdAt);
+    'INSERT INTO tasks (title, description, priority, completed, dueDate, createdAt) VALUES (?, ?, ?, 0, ?, ?)'
+  ).run(title, description || '', priority || 'medium', dueDate || null, createdAt);
 
   const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(result.lastInsertRowid);
   res.status(201).json(formatTask(task));
@@ -84,7 +84,7 @@ app.put('/tasks/:id', (req, res) => {
   const existing = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
   if (!existing) return res.status(404).json({ error: 'Task not found' });
 
-  const { title, description, completed, priority } = req.body;
+  const { title, description, completed, priority, dueDate } = req.body;
   if (priority !== undefined && !VALID_PRIORITIES.includes(priority)) {
     return res.status(400).json({ error: 'Priority must be low, medium, or high' });
   }
@@ -94,6 +94,7 @@ app.put('/tasks/:id', (req, res) => {
   if (description !== undefined) updates.description = description;
   if (completed !== undefined) updates.completed = completed ? 1 : 0;
   if (priority !== undefined) updates.priority = priority;
+  if (dueDate !== undefined) updates.dueDate = dueDate || null;
 
   if (Object.keys(updates).length > 0) {
     const setClauses = Object.keys(updates).map(k => `${k} = ?`).join(', ');

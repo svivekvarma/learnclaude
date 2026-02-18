@@ -63,6 +63,23 @@ describe('Task Tracker API', () => {
       expect(res.status).toBe(400);
       expect(res.body.error).toBe('Priority must be low, medium, or high');
     });
+
+    it('should accept a due date', async () => {
+      const res = await request(app)
+        .post('/tasks')
+        .send({ title: 'With deadline', dueDate: '2026-03-15' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.dueDate).toBe('2026-03-15');
+    });
+
+    it('should default dueDate to null', async () => {
+      const res = await request(app)
+        .post('/tasks')
+        .send({ title: 'No deadline' });
+
+      expect(res.body.dueDate).toBeNull();
+    });
   });
 
   describe('GET /tasks', () => {
@@ -126,6 +143,30 @@ describe('Task Tracker API', () => {
     it('should return 404 for non-existent task', async () => {
       const res = await request(app).put('/tasks/999').send({ title: 'Nope' });
       expect(res.status).toBe(404);
+    });
+
+    it('should update the due date', async () => {
+      const created = await request(app)
+        .post('/tasks')
+        .send({ title: 'Deadline task', dueDate: '2026-03-01' });
+
+      const res = await request(app)
+        .put(`/tasks/${created.body.id}`)
+        .send({ dueDate: '2026-04-01' });
+
+      expect(res.body.dueDate).toBe('2026-04-01');
+    });
+
+    it('should clear the due date', async () => {
+      const created = await request(app)
+        .post('/tasks')
+        .send({ title: 'Clear date', dueDate: '2026-03-01' });
+
+      const res = await request(app)
+        .put(`/tasks/${created.body.id}`)
+        .send({ dueDate: '' });
+
+      expect(res.body.dueDate).toBeNull();
     });
   });
 
