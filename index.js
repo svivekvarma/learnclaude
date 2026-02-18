@@ -2,8 +2,11 @@ const express = require('express');
 const app = express();
 const PORT = 3000;
 
-// Middleware to parse JSON bodies
+const path = require('path');
+
+// Middleware
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 // In-memory task storage (exported for test resets)
 let tasks = [];

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Task Tracker</h1>
+      <p class="subtitle">Built with Claude Code</p>
+    </header>
+
+    <!-- Add Task Form -->
+    <form id="task-form" class="task-form">
+      <div class="form-row">
+        <input type="text" id="task-title" placeholder="What needs to be done?" required>
+        <select id="task-priority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+        <button type="submit">Add Task</button>
+      </div>
+      <input type="text" id="task-description" placeholder="Description (optional)">
+    </form>
+
+    <!-- Filters -->
+    <div class="filters">
+      <input type="text" id="search-input" placeholder="Search tasks...">
+      <div class="filter-buttons">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="active">Active</button>
+        <button class="filter-btn" data-filter="completed">Completed</button>
+      </div>
+    </div>
+
+    <!-- Task List -->
+    <div id="task-list" class="task-list">
+      <div class="empty-state">No tasks yet. Add one above!</div>
+    </div>
+
+    <!-- Stats -->
+    <div id="stats" class="stats"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
