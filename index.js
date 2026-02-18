@@ -5,9 +5,14 @@ const PORT = 3000;
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// In-memory task storage
+// In-memory task storage (exported for test resets)
 let tasks = [];
 let nextId = 1;
+
+function resetTasks() {
+  tasks = [];
+  nextId = 1;
+}
 
 // GET all tasks (with optional filters: ?completed=true&search=keyword)
 app.get('/tasks', (req, res) => {
@@ -74,6 +79,11 @@ app.delete('/tasks/:id', (req, res) => {
   res.status(204).send();
 });
 
-app.listen(PORT, () => {
-  console.log(`Task Tracker API running on http://localhost:${PORT}`);
-});
+// Only start server if run directly (not imported by tests)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Task Tracker API running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = { app, resetTasks };
