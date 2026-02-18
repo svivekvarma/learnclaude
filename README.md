@@ -8,9 +8,11 @@ A full-stack task management app built with Express, SQLite, and vanilla JavaScr
 
 - Create, update, complete, and delete tasks
 - Priority levels (low, medium, high) with color-coded badges
+- Due dates with overdue highlighting (pulsing red badges)
+- Smart date labels: "Today", "Tomorrow", or "Mon DD"
 - Search tasks by title
 - Filter by status (all, active, completed)
-- Live stats bar
+- Live stats bar (total, completed, remaining, overdue)
 - Data persists across server restarts (SQLite)
 
 ## Quick Start
@@ -42,7 +44,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ```bash
 curl -X POST http://localhost:3000/tasks \
   -H "Content-Type: application/json" \
-  -d '{"title": "My task", "priority": "high"}'
+  -d '{"title": "My task", "priority": "high", "dueDate": "2026-03-15"}'
 ```
 
 ### Task Object
@@ -54,6 +56,7 @@ curl -X POST http://localhost:3000/tasks \
   "description": "",
   "priority": "high",
   "completed": false,
+  "dueDate": "2026-03-15",
   "createdAt": "2026-02-18T02:30:00.000Z"
 }
 ```
@@ -64,7 +67,22 @@ curl -X POST http://localhost:3000/tasks \
 npm test
 ```
 
-13 tests covering all CRUD operations, validation, search, and filtering. Tests use an in-memory SQLite database for speed and isolation.
+17 tests covering all CRUD operations, validation, search, filtering, and due dates. Tests use an in-memory SQLite database for speed and isolation.
+
+## Custom Skills
+
+This project includes Claude Code custom commands in `.claude/commands/`:
+
+| Command | Description |
+|---------|-------------|
+| `/dev` | Start dev server and verify |
+| `/ship` | Test, commit, and push |
+| `/feature <desc>` | Full feature lifecycle |
+| `/migrate <desc>` | Add a new database field |
+| `/api` | Run API endpoint tests |
+| `/review` | Code review audit |
+| `/docs` | Sync README with code |
+| `/resetdb` | Fresh database reset |
 
 ## Tech Stack
 
@@ -76,13 +94,15 @@ npm test
 ## Project Structure
 
 ```
-index.js          - Express API server and routes
-db.js             - SQLite database module
-index.test.js     - Test suite
+index.js              - Express API server and routes
+db.js                 - SQLite database module with migrations
+index.test.js         - Test suite (17 tests)
+CLAUDE.md             - Claude Code project instructions
 public/
-  index.html      - App shell
-  style.css       - Dark theme styles
-  app.js          - Frontend logic (fetch-based API client)
+  index.html          - App shell
+  style.css           - Dark theme styles
+  app.js              - Frontend logic (fetch-based API client)
+.claude/commands/     - Custom slash commands
 ```
 
 ---
