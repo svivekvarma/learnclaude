@@ -1,9 +1,18 @@
 const request = require('supertest');
-const { app, resetTasks } = require('./index');
+const { app, initApp, resetTasks, getDb } = require('./index');
 
-// Reset tasks before each test for isolation
+// Use in-memory SQLite for tests (fast, no file cleanup)
+beforeAll(() => {
+  initApp(':memory:');
+});
+
 beforeEach(() => {
   resetTasks();
+});
+
+afterAll(() => {
+  const db = getDb();
+  if (db) db.close();
 });
 
 describe('Task Tracker API', () => {
@@ -17,7 +26,7 @@ describe('Task Tracker API', () => {
       expect(res.status).toBe(201);
       expect(res.body.title).toBe('Test task');
       expect(res.body.completed).toBe(false);
-      expect(res.body.id).toBe(1);
+      expect(res.body.id).toBeDefined();
     });
 
     it('should reject a task without a title', async () => {
@@ -76,9 +85,9 @@ describe('Task Tracker API', () => {
     });
 
     it('should filter by completion status', async () => {
-      await request(app).post('/tasks').send({ title: 'Done task' });
+      const t1 = await request(app).post('/tasks').send({ title: 'Done task' });
       await request(app).post('/tasks').send({ title: 'Pending task' });
-      await request(app).put('/tasks/1').send({ completed: true });
+      await request(app).put(`/tasks/${t1.body.id}`).send({ completed: true });
 
       const res = await request(app).get('/tasks?completed=true');
       expect(res.body).toHaveLength(1);
@@ -88,9 +97,9 @@ describe('Task Tracker API', () => {
 
   describe('GET /tasks/:id', () => {
     it('should return a single task', async () => {
-      await request(app).post('/tasks').send({ title: 'Find me' });
+      const created = await request(app).post('/tasks').send({ title: 'Find me' });
 
-      const res = await request(app).get('/tasks/1');
+      const res = await request(app).get(`/tasks/${created.body.id}`);
       expect(res.status).toBe(200);
       expect(res.body.title).toBe('Find me');
     });
@@ -104,10 +113,10 @@ describe('Task Tracker API', () => {
 
   describe('PUT /tasks/:id', () => {
     it('should update a task', async () => {
-      await request(app).post('/tasks').send({ title: 'Original' });
+      const created = await request(app).post('/tasks').send({ title: 'Original' });
 
       const res = await request(app)
-        .put('/tasks/1')
+        .put(`/tasks/${created.body.id}`)
         .send({ title: 'Updated', completed: true });
 
       expect(res.body.title).toBe('Updated');
@@ -122,9 +131,9 @@ describe('Task Tracker API', () => {
 
   describe('DELETE /tasks/:id', () => {
     it('should delete a task', async () => {
-      await request(app).post('/tasks').send({ title: 'To delete' });
+      const created = await request(app).post('/tasks').send({ title: 'To delete' });
 
-      const res = await request(app).delete('/tasks/1');
+      const res = await request(app).delete(`/tasks/${created.body.id}`);
       expect(res.status).toBe(204);
 
       const list = await request(app).get('/tasks');
