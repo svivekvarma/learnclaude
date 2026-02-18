@@ -28,6 +28,32 @@ describe('Task Tracker API', () => {
       expect(res.status).toBe(400);
       expect(res.body.error).toBe('Title is required');
     });
+
+    it('should default priority to medium', async () => {
+      const res = await request(app)
+        .post('/tasks')
+        .send({ title: 'No priority set' });
+
+      expect(res.body.priority).toBe('medium');
+    });
+
+    it('should accept a valid priority', async () => {
+      const res = await request(app)
+        .post('/tasks')
+        .send({ title: 'Urgent', priority: 'high' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.priority).toBe('high');
+    });
+
+    it('should reject an invalid priority', async () => {
+      const res = await request(app)
+        .post('/tasks')
+        .send({ title: 'Bad priority', priority: 'urgent' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('Priority must be low, medium, or high');
+    });
   });
 
   describe('GET /tasks', () => {
@@ -57,6 +83,22 @@ describe('Task Tracker API', () => {
       const res = await request(app).get('/tasks?completed=true');
       expect(res.body).toHaveLength(1);
       expect(res.body[0].title).toBe('Done task');
+    });
+  });
+
+  describe('GET /tasks/:id', () => {
+    it('should return a single task', async () => {
+      await request(app).post('/tasks').send({ title: 'Find me' });
+
+      const res = await request(app).get('/tasks/1');
+      expect(res.status).toBe(200);
+      expect(res.body.title).toBe('Find me');
+    });
+
+    it('should return 404 for non-existent task', async () => {
+      const res = await request(app).get('/tasks/999');
+      expect(res.status).toBe(404);
+      expect(res.body.error).toBe('Task not found');
     });
   });
 

@@ -8,6 +8,7 @@ app.use(express.json());
 // In-memory task storage (exported for test resets)
 let tasks = [];
 let nextId = 1;
+const VALID_PRIORITIES = ['low', 'medium', 'high'];
 
 function resetTasks() {
   tasks = [];
@@ -42,13 +43,17 @@ app.get('/tasks/:id', (req, res) => {
 
 // POST create a new task
 app.post('/tasks', (req, res) => {
-  const { title, description } = req.body;
+  const { title, description, priority } = req.body;
   if (!title) return res.status(400).json({ error: 'Title is required' });
+  if (priority !== undefined && !VALID_PRIORITIES.includes(priority)) {
+    return res.status(400).json({ error: 'Priority must be low, medium, or high' });
+  }
 
   const task = {
     id: nextId++,
     title,
     description: description || '',
+    priority: priority || 'medium',
     completed: false,
     createdAt: new Date().toISOString()
   };
@@ -62,10 +67,14 @@ app.put('/tasks/:id', (req, res) => {
   const task = tasks.find(t => t.id === parseInt(req.params.id));
   if (!task) return res.status(404).json({ error: 'Task not found' });
 
-  const { title, description, completed } = req.body;
+  const { title, description, completed, priority } = req.body;
+  if (priority !== undefined && !VALID_PRIORITIES.includes(priority)) {
+    return res.status(400).json({ error: 'Priority must be low, medium, or high' });
+  }
   if (title !== undefined) task.title = title;
   if (description !== undefined) task.description = description;
   if (completed !== undefined) task.completed = completed;
+  if (priority !== undefined) task.priority = priority;
 
   res.json(task);
 });
